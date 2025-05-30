@@ -227,8 +227,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: `http://localhost:5173/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: 'http://localhost:5173/cancel',
+      success_url: `https://contrato-claro.vercel.app/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: 'https://contrato-claro.vercel.app/cancel',
     });
 
     // Salva a relação session_id no Firestore
