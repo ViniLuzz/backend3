@@ -134,7 +134,7 @@ app.post('/api/analisar-contrato', upload.single('file'), async (req, res) => {
     let recomendacoes = '';
     try {
       // Chama o endpoint interno para resumir e classificar cláusulas
-      const resumoResp = await fetch('http://localhost:3001/api/resumir-clausulas', {
+       const resumoResp = await fetch('/api/resumir-clausulas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clausulas: resposta })
