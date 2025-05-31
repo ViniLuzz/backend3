@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import pdfParse from 'pdf-parse';
+import PDFParser from 'pdf2json';
 import Tesseract from 'tesseract.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
@@ -82,18 +82,25 @@ async function extractTextFromPDF(filePath) {
       throw new Error(`Arquivo não encontrado: ${filePath}`);
     }
     
-    const dataBuffer = fs.readFileSync(filePath);
-    console.log('Arquivo lido com sucesso, tamanho:', dataBuffer.length);
-    
-    // Usa uma abordagem mais simples do pdf-parse
-    const data = await pdfParse(dataBuffer);
-    console.log('PDF parseado com sucesso');
-    
-    if (!data || !data.text) {
-      throw new Error('Não foi possível extrair texto do PDF');
-    }
-    
-    return data.text;
+    return new Promise((resolve, reject) => {
+      const pdfParser = new PDFParser();
+      
+      pdfParser.on('pdfParser_dataReady', (pdfData) => {
+        try {
+          const text = pdfParser.getRawTextContent();
+          console.log('PDF parseado com sucesso');
+          resolve(text);
+        } catch (error) {
+          reject(new Error(`Erro ao extrair texto do PDF: ${error.message}`));
+        }
+      });
+      
+      pdfParser.on('pdfParser_dataError', (error) => {
+        reject(new Error(`Erro ao processar PDF: ${error.message}`));
+      });
+      
+      pdfParser.loadPDF(filePath);
+    });
   } catch (error) {
     console.error('Erro ao extrair texto do PDF:', error);
     throw new Error(`Falha ao processar PDF: ${error.message}`);
