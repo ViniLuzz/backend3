@@ -17,12 +17,16 @@ dotenv.config();
 const app = express();
 
 // Garante que o diretório de uploads existe
-const uploadsDir = path.join(process.cwd(), 'uploads');
+const uploadsDir = path.resolve(process.cwd(), 'uploads');
+console.log('Diretório de uploads:', uploadsDir);
+
 if (!fs.existsSync(uploadsDir)) {
+  console.log('Criando diretório de uploads...');
   fs.mkdirSync(uploadsDir, { recursive: true });
   // Tenta definir permissões adequadas (se possível)
   try {
     fs.chmodSync(uploadsDir, '755');
+    console.log('Permissões do diretório configuradas com sucesso');
   } catch (error) {
     console.warn('Não foi possível definir permissões do diretório uploads:', error);
   }
@@ -35,6 +39,7 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
   fileFilter: (req, file, cb) => {
+    console.log('Verificando tipo de arquivo:', file.mimetype);
     // Aceita apenas PDFs e imagens
     if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -77,19 +82,11 @@ async function extractTextFromPDF(filePath) {
       throw new Error(`Arquivo não encontrado: ${filePath}`);
     }
     
-    // Lê o arquivo como buffer
     const dataBuffer = fs.readFileSync(filePath);
     console.log('Arquivo lido com sucesso, tamanho:', dataBuffer.length);
     
-    // Configurações do pdf-parse
-    const options = {
-      pagerender: function(pageData) {
-        return pageData.getTextContent();
-      }
-    };
-    
-    // Tenta fazer o parse do PDF
-    const data = await pdfParse(dataBuffer, options);
+    // Usa uma abordagem mais simples do pdf-parse
+    const data = await pdfParse(dataBuffer);
     console.log('PDF parseado com sucesso');
     
     if (!data || !data.text) {
