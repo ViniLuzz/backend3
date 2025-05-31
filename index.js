@@ -15,10 +15,32 @@ const require = createRequire(import.meta.url);
 // Configurações
 dotenv.config();
 const app = express();
+
+// Garante que o diretório de uploads existe
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  // Tenta definir permissões adequadas (se possível)
+  try {
+    fs.chmodSync(uploadsDir, '755');
+  } catch (error) {
+    console.warn('Não foi possível definir permissões do diretório uploads:', error);
+  }
+}
+
+// Configuração do multer com limpeza automática
 const upload = multer({ 
-  dest: 'uploads/',
+  dest: uploadsDir,
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Aceita apenas PDFs e imagens
+    if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de arquivo não suportado. Apenas PDFs e imagens são permitidos.'));
+    }
   }
 });
 
@@ -49,9 +71,36 @@ const firestore = admin.firestore();
 
 // Função para extrair texto de PDF
 async function extractTextFromPDF(filePath) {
-  const dataBuffer = fs.readFileSync(filePath);
-  const data = await pdfParse(dataBuffer);
-  return data.text;
+  try {
+    console.log('Tentando ler arquivo PDF:', filePath);
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Arquivo não encontrado: ${filePath}`);
+    }
+    
+    // Lê o arquivo como buffer
+    const dataBuffer = fs.readFileSync(filePath);
+    console.log('Arquivo lido com sucesso, tamanho:', dataBuffer.length);
+    
+    // Configurações do pdf-parse
+    const options = {
+      pagerender: function(pageData) {
+        return pageData.getTextContent();
+      }
+    };
+    
+    // Tenta fazer o parse do PDF
+    const data = await pdfParse(dataBuffer, options);
+    console.log('PDF parseado com sucesso');
+    
+    if (!data || !data.text) {
+      throw new Error('Não foi possível extrair texto do PDF');
+    }
+    
+    return data.text;
+  } catch (error) {
+    console.error('Erro ao extrair texto do PDF:', error);
+    throw new Error(`Falha ao processar PDF: ${error.message}`);
+  }
 }
 
 // Função para extrair texto de imagem
