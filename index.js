@@ -105,7 +105,7 @@ app.post('/api/analisar-contrato', upload.single('file'), async (req, res) => {
 
     console.log('Enviando para análise da IA');
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { 
           role: 'system', 
@@ -134,7 +134,7 @@ app.post('/api/analisar-contrato', upload.single('file'), async (req, res) => {
     let recomendacoes = '';
     try {
       // Chama o endpoint interno para resumir e classificar cláusulas
-       const resumoResp = await fetch('/api/resumir-clausulas', {
+      const resumoResp = await fetch('/api/resumir-clausulas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clausulas: resposta })
@@ -179,7 +179,7 @@ app.post('/api/resumir-clausulas', express.json({limit: '2mb'}), async (req, res
     const prompt = `Receba a lista de cláusulas abaixo, separe-as em duas listas: "Cláusulas seguras" e "Cláusulas de risco". Para cada cláusula, gere um resumo curto e simples, sem explicação longa. Responda apenas com o JSON, sem explicações antes ou depois. Exemplo: { "seguras": [ { "titulo": "...", "resumo": "..." } ], "riscos": [ { "titulo": "...", "resumo": "..." } ] }.\n\nCláusulas:\n${clausulas}`;
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { role: 'system', content: 'Você é um assistente jurídico que classifica e resume cláusulas de contrato.' },
         { role: 'user', content: prompt }
@@ -227,8 +227,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: `https://contrato-claro.vercel.app/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: 'https://contrato-claro.vercel.app/cancel',
+      success_url: `http://localhost:5173/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: 'http://localhost:5173/cancel',
     });
 
     // Salva a relação session_id no Firestore
