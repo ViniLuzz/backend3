@@ -281,7 +281,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: `https://app.naosefoda.com.br/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `https://app.naosefoda.com.br/success?token=${token}`,
       cancel_url: 'https://app.naosefoda.com.br/cancel',
     });
 
