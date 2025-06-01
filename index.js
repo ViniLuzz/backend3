@@ -49,11 +49,12 @@ const upload = multer({
   }
 });
 
-// CORS liberado para qualquer origem (desenvolvimento/teste)
+// CORS liberado para produção e desenvolvimento
 app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, true);
-  },
+  origin: [
+    'https://app.naosefoda.com.br', // frontend produção
+    'http://localhost:5173' // desenvolvimento local
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   credentials: true
@@ -280,8 +281,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: `http://localhost:5173/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: 'http://localhost:5173/cancel',
+      success_url: `https://app.naosefoda.com.br/success?token=${token}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: 'https://app.naosefoda.com.br/cancel',
     });
 
     // Salva a relação session_id no Firestore
