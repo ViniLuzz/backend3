@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import PDFParser from 'pdf2json';
+import pdfParse from 'pdf-parse';
 import Tesseract from 'tesseract.js';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
@@ -78,30 +78,9 @@ const firestore = admin.firestore();
 // Função para extrair texto de PDF
 async function extractTextFromPDF(filePath) {
   try {
-    console.log('Tentando ler arquivo PDF:', filePath);
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Arquivo não encontrado: ${filePath}`);
-    }
-    
-    return new Promise((resolve, reject) => {
-      const pdfParser = new PDFParser();
-      
-      pdfParser.on('pdfParser_dataReady', (pdfData) => {
-        try {
-          const text = pdfParser.getRawTextContent();
-          console.log('PDF parseado com sucesso');
-          resolve(text);
-        } catch (error) {
-          reject(new Error(`Erro ao extrair texto do PDF: ${error.message}`));
-        }
-      });
-      
-      pdfParser.on('pdfParser_dataError', (error) => {
-        reject(new Error(`Erro ao processar PDF: ${error.message}`));
-      });
-      
-      pdfParser.loadPDF(filePath);
-    });
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdfParse(dataBuffer);
+    return data.text;
   } catch (error) {
     console.error('Erro ao extrair texto do PDF:', error);
     throw new Error(`Falha ao processar PDF: ${error.message}`);
